@@ -1,0 +1,389 @@
+
+<body>
+<div class="layout">
+
+  <!-- ── PANEL 1: Code Input ─────────────────────────────── -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Code</h2>
+      <button id="copyCodeBtn">Copy</button>
+    </div>
+    <textarea id="codeInput" placeholder="Paste your HTML/CSS code here…"></textarea>
+  </section>
+
+  <!-- ── PANEL 2: Variables ──────────────────────────────── -->
+  <section class="panel">
+    <h2>Variables</h2>
+    <div id="variablesPanel">
+      <p class="no-vars">Paste code on the left to detect variables automatically.</p>
+    </div>
+  </section>
+
+  <!-- ── PANEL 3: Preview ───────────────────────────────── -->
+  <section class="panel">
+    <h2>Preview</h2>
+    <iframe id="preview" title="Live preview"></iframe>
+  </section>
+
+</div>
+ 
+</body>
+</html>
+
+<style>
+/* INSPIRED BY LUXURY POSION's { https://luxury-poison.tumblr.com/ all credit for idea to this mind!! } */
+
+/* ─── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b27;
+      --surface2:    #1e2535;
+      --border:      #2a3450;
+      --accent:      #4f8ef7;
+      --accent-dim:  #2d5cbf;
+      --text:        #cdd6f4;
+      --text-muted:  #6b7a9e;
+      --success:     #4ade80;
+      --header-h:    48px;
+      --radius:      8px;
+      --font-ui:     'Segoe UI', system-ui, sans-serif;
+      --font-mono:   'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    /* ─── RESET ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 14px;
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 280px 1fr;
+      grid-template-rows: 100vh;
+      gap: 1px;
+      background: var(--border);
+      height: 100vh;
+    }
+
+    /* ─── PANELS ─────────────────────────────────────────── */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: var(--header-h);
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .panel-header h2,
+    .panel > h2 {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .panel > h2 {
+      padding: 0 16px;
+      height: var(--header-h);
+      line-height: var(--header-h);
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ─── COPY BUTTON ────────────────────────────────────── */
+    #copyCodeBtn {
+      background: var(--accent-dim);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 6px 14px;
+      font-size: 12px;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    #copyCodeBtn:hover  { background: var(--accent); }
+    #copyCodeBtn:active { transform: scale(0.96); }
+    #copyCodeBtn.copied { background: var(--success); color: #0d1117; }
+
+    /* ─── CODE TEXTAREA ──────────────────────────────────── */
+    #codeInput {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      border: none;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+    #codeInput::placeholder { color: var(--text-muted); }
+
+    /* ─── VARIABLES PANEL ────────────────────────────────── */
+    #variablesPanel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #variablesPanel::-webkit-scrollbar        { width: 6px; }
+    #variablesPanel::-webkit-scrollbar-track  { background: transparent; }
+    #variablesPanel::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 3px; }
+
+    .var-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .var-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 2px 0;
+    }
+
+    .var-input {
+      width: 100%;
+      padding: 7px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .var-input:focus { border-color: var(--accent); }
+
+    /* color swatch row */
+    .var-color-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .var-color-row input[type="color"] {
+      width: 32px;
+      height: 32px;
+      padding: 2px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .var-color-row .var-input { flex: 1; }
+
+    .no-vars {
+      color: var(--text-muted);
+      font-size: 12px;
+      text-align: center;
+      margin-top: 24px;
+      line-height: 1.6;
+    }
+
+    /* ─── PREVIEW IFRAME ─────────────────────────────────── */
+    #preview {
+      flex: 1;
+      border: none;
+      background: #fff;
+    }
+
+</style>
+
+<script>
+  const codeInput      = document.getElementById('codeInput');
+  const variablesPanel = document.getElementById('variablesPanel');
+  const preview        = document.getElementById('preview');
+  const copyBtn        = document.getElementById('copyCodeBtn');
+
+  // ── State ────────────────────────────────────────────────
+  let variables = {};   // { varName: currentValue }
+  let debounceTimer;
+
+  // ── Detect CSS custom properties (--var-name: value) ─────
+  function detectVariables(code) {
+    const regex = /--([\w-]+)\s*:\s*([^;}\n]+)/g;
+    const found = {};
+    let match;
+    while ((match = regex.exec(code)) !== null) {
+      const name = match[1].trim();
+      const val  = match[2].trim();
+      // keep user-edited value if already tracked
+      found[name] = (variables[name] !== undefined) ? variables[name] : val;
+    }
+    return found;
+  }
+
+  // ── Guess input type from value ───────────────────────────
+  function inferType(value) {
+    if (/^#[0-9a-fA-F]{3,8}$/.test(value))                 return 'color';
+    if (/^rgb/.test(value))                                  return 'color';
+    if (/^\d+(\.\d+)?(px|em|rem|vh|vw|%)$/.test(value))    return 'size';
+    return 'text';
+  }
+
+  // ── Build the variables UI ────────────────────────────────
+  function renderVariables() {
+    variablesPanel.innerHTML = '';
+
+    const keys = Object.keys(variables);
+    if (keys.length === 0) {
+      variablesPanel.innerHTML = '<p class="no-vars">No CSS variables detected.<br>Add <code>--variable: value;</code> to your code.</p>';
+      return;
+    }
+
+    keys.forEach(name => {
+      const value = variables[name];
+      const type  = inferType(value);
+      const group = document.createElement('div');
+      group.className = 'var-group';
+
+      const label = document.createElement('div');
+      label.className = 'var-label';
+      label.textContent = '--' + name;
+      group.appendChild(label);
+
+      if (type === 'color') {
+        // color picker + text field side by side
+        const row = document.createElement('div');
+        row.className = 'var-color-row';
+
+        const picker = document.createElement('input');
+        picker.type  = 'color';
+        picker.value = toHex(value);
+
+        const textField = document.createElement('input');
+        textField.type      = 'text';
+        textField.className = 'var-input';
+        textField.value     = value;
+
+        picker.addEventListener('input', () => {
+          textField.value   = picker.value;
+          variables[name]   = picker.value;
+          updatePreview();
+        });
+        textField.addEventListener('input', () => {
+          variables[name] = textField.value;
+          if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) picker.value = textField.value;
+          updatePreview();
+        });
+
+        row.appendChild(picker);
+        row.appendChild(textField);
+        group.appendChild(row);
+
+      } else {
+        const input = document.createElement('input');
+        input.type      = 'text';
+        input.className = 'var-input';
+        input.value     = value;
+        input.addEventListener('input', () => {
+          variables[name] = input.value;
+          updatePreview();
+        });
+        group.appendChild(input);
+      }
+
+      variablesPanel.appendChild(group);
+    });
+  }
+
+  // ── Apply variable overrides and write to preview ─────────
+  function updatePreview() {
+    let code = codeInput.value;
+
+    // Inject a <style> block that overrides :root variables
+    const overrides = Object.entries(variables)
+      .map(([k, v]) => `  --${k}: ${v};`)
+      .join('\n');
+
+    if (overrides) {
+      const injection = `<style>:root {\n${overrides}\n}</style>`;
+      // place after <head> or at the top
+      if (/<head>/i.test(code)) {
+        code = code.replace(/<head>/i, '<head>' + injection);
+      } else {
+        code = injection + code;
+      }
+    }
+
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    doc.open();
+    doc.write(code);
+    doc.close();
+  }
+
+  // ── Debounced handler for code input ──────────────────────
+  codeInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      variables = detectVariables(codeInput.value);
+      renderVariables();
+      updatePreview();
+    }, 300);
+  });
+
+  // ── Copy button ───────────────────────────────────────────
+  copyBtn.addEventListener('click', () => {
+    if (!codeInput.value) return;
+    navigator.clipboard.writeText(codeInput.value).then(() => {
+      copyBtn.textContent = '✓ Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+
+  // ── Tab key inserts spaces instead of leaving the field ───
+  codeInput.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = codeInput.selectionStart;
+      const end = codeInput.selectionEnd;
+      codeInput.value = codeInput.value.substring(0, s) + '  ' + codeInput.value.substring(end);
+      codeInput.selectionStart = codeInput.selectionEnd = s + 2;
+    }
+  });
+
+  // ── Utility: convert any color string to hex for picker ───
+  function toHex(color) {
+    if (/^#[0-9a-fA-F]{6}$/.test(color)) return color;
+    if (/^#[0-9a-fA-F]{3}$/.test(color)) {
+      return '#' + color[1]+color[1]+color[2]+color[2]+color[3]+color[3];
+    }
+    // fallback
+    return '#4f8ef7';
+  }</script>
