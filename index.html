@@ -47,8 +47,12 @@
         0deg, transparent, transparent 2px,
         rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
       );
-      pointer-events: none; z-index: 9998;
+      pointer-events: none; z-index: 1;
     }
+
+    /* Preview panel sits above scanlines */
+    #panelPreview { z-index: 2; }
+    #preview { position: relative; z-index: 2; }
 
     .corner { position: fixed; width: 20px; height: 20px; pointer-events: none; z-index: 9999; }
     .corner-tl { top:0; left:0;   border-top:2px solid var(--gold); border-left:2px solid var(--gold); }
@@ -205,7 +209,7 @@
     .no-vars::before { content:'// '; color:var(--border-glow); }
 
     /* PREVIEW IFRAME */
-    #preview { flex:1; border:none; background:#fff; display:block; }
+    #preview { flex:1; border:none; background:#080c10; display:block; }
 
     /* DIVIDERS */
     .divider {
@@ -408,11 +412,32 @@
   }
 
   // ── Update preview using blob URL ─────────────────────────
-  function updatePreview() {
+  function updatePreview(varsOnly = false) {
     if (!codeInput.value.trim()) return;
+
+    // If only variables changed, patch the style directly in the
+    // live iframe — no reload, no white flash, no flicker.
+    if (varsOnly) {
+      try {
+        const iframeDoc = preview.contentDocument || preview.contentWindow.document;
+        let patch = iframeDoc.getElementById('__ist_patch__');
+        if (!patch) {
+          patch = iframeDoc.createElement('style');
+          patch.id = '__ist_patch__';
+          iframeDoc.head.appendChild(patch);
+        }
+        const overrides = Object.entries(variables)
+          .map(([k, v]) => '--' + k + ': ' + v + ';').join(' ');
+        patch.textContent = ':root { ' + overrides + ' }';
+        return;
+      } catch(e) { /* fall through to full reload if patch fails */ }
+    }
+
+    // Full reload for code changes — use dark bg so gap is never white
     const finalCode = buildFinalCode();
+    const safeCode = finalCode.replace(/<html/i, '<html style="background:#080c10"');
     if (blobUrl) URL.revokeObjectURL(blobUrl);
-    const blob = new Blob([finalCode], { type: 'text/html' });
+    const blob = new Blob([safeCode], { type: 'text/html' });
     blobUrl = URL.createObjectURL(blob);
     preview.src = blobUrl;
   }
@@ -468,12 +493,12 @@
         picker.addEventListener('input', () => {
           textField.value  = picker.value;
           variables[name]  = picker.value;
-          updatePreview();
+          updatePreview(true);
         });
         textField.addEventListener('input', () => {
           variables[name] = textField.value;
           if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) picker.value = textField.value;
-          updatePreview();
+          updatePreview(true);
         });
 
         row.appendChild(picker);
@@ -486,7 +511,7 @@
         input.value = value;
         input.addEventListener('input', () => {
           variables[name] = input.value;
-          updatePreview();
+          updatePreview(true);
         });
         group.appendChild(input);
       }
