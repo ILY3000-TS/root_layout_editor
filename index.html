@@ -1,56 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IronSuit&Tie — Code Editor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
 
-<body>
-<div class="layout">
-
-  <!-- ── PANEL 1: Code Input ─────────────────────────────── -->
-  <section class="panel">
-    <div class="panel-header">
-      <h2>Code</h2>
-      <button id="copyCodeBtn">Copy</button>
-    </div>
-    <textarea id="codeInput" placeholder="Paste your HTML/CSS code here…"></textarea>
-  </section>
-
-  <!-- ── PANEL 2: Variables ──────────────────────────────── -->
-  <section class="panel">
-    <h2>Variables</h2>
-    <div id="variablesPanel">
-      <p class="no-vars">Paste code on the left to detect variables automatically.</p>
-    </div>
-  </section>
-
-  <!-- ── PANEL 3: Preview ───────────────────────────────── -->
-  <section class="panel">
-    <h2>Preview</h2>
-    <iframe id="preview" title="Live preview"></iframe>
-  </section>
-
-</div>
- 
-</body>
-</html>
-
-<style>
-/* INSPIRED BY LUXURY POSION's { https://luxury-poison.tumblr.com/ all credit for idea to this mind!! } */
-
-/* ─── TOKENS ─────────────────────────────────────────── */
     :root {
-      --bg:          #0d1117;
-      --surface:     #161b27;
-      --surface2:    #1e2535;
-      --border:      #2a3450;
-      --accent:      #4f8ef7;
-      --accent-dim:  #2d5cbf;
-      --text:        #cdd6f4;
-      --text-muted:  #6b7a9e;
-      --success:     #4ade80;
+      --bg:          #080c10;
+      --surface:     #0d1520;
+      --surface2:    #111c2e;
+      --border:      #1e3a5f;
+      --border-glow: #2a6496;
+      --arc:         #47b3e8;
+      --arc-dim:     #1a6a9a;
+      --arc-bright:  #7dd4f5;
+      --gold:        #c8922a;
+      --gold-bright: #f0b93a;
+      --red:         #c0392b;
+      --text:        #b8d4e8;
+      --text-muted:  #4a7090;
+      --success:     #27ae60;
       --header-h:    48px;
-      --radius:      8px;
-      --font-ui:     'Segoe UI', system-ui, sans-serif;
-      --font-mono:   'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      --radius:      4px;
+      --font-ui:     'Exo 2', 'Segoe UI', sans-serif;
+      --font-display:'Rajdhani', sans-serif;
+      --font-mono:   'Share Tech Mono', 'Consolas', monospace;
     }
 
-    /* ─── RESET ──────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
@@ -59,179 +37,387 @@
       color: var(--text);
       font-family: var(--font-ui);
       font-size: 14px;
-    }
-
-    /* ─── LAYOUT ─────────────────────────────────────────── */
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr 280px 1fr;
-      grid-template-rows: 100vh;
-      gap: 1px;
-      background: var(--border);
-      height: 100vh;
-    }
-
-    /* ─── PANELS ─────────────────────────────────────────── */
-    .panel {
-      display: flex;
-      flex-direction: column;
-      background: var(--surface);
       overflow: hidden;
     }
 
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none; z-index: 9998;
+    }
+
+    .corner { position: fixed; width: 20px; height: 20px; pointer-events: none; z-index: 9999; }
+    .corner-tl { top:0; left:0;   border-top:2px solid var(--gold); border-left:2px solid var(--gold); }
+    .corner-tr { top:0; right:0;  border-top:2px solid var(--gold); border-right:2px solid var(--gold); }
+    .corner-bl { bottom:0; left:0;  border-bottom:2px solid var(--gold); border-left:2px solid var(--gold); }
+    .corner-br { bottom:0; right:0; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold); }
+
+    .wrapper { display: flex; flex-direction: column; height: 100vh; }
+
+    /* TOP BAR */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; height: 52px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border-glow);
+      box-shadow: 0 1px 16px rgba(71,179,232,0.10);
+      flex-shrink: 0; z-index: 10;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .arc-icon { width: 28px; height: 28px; flex-shrink: 0; }
+    .arc-icon svg { width: 100%; height: 100%; animation: arc-spin 8s linear infinite; }
+    @keyframes arc-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .logo-text {
+      font-family: var(--font-display); font-size: 20px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--arc-bright);
+    }
+    .logo-text span { color: var(--gold-bright); }
+    .status-row { display: flex; align-items: center; gap: 6px; }
+    .dot { width:8px; height:8px; border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+    .dot.arc  { background:var(--arc);  box-shadow:0 0 6px var(--arc); }
+    .dot.gold { background:var(--gold); box-shadow:0 0 6px var(--gold); animation-delay:.6s; }
+    .dot.red  { background:var(--red);  box-shadow:0 0 6px var(--red);  animation-delay:1.2s; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* TOOLBAR */
+    .toolbar {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 16px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 42px; flex-shrink: 0;
+    }
+    .toolbar-label {
+      font-family: var(--font-display); font-size: 11px; color: var(--text-muted);
+      font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 4px;
+    }
+    .layout-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text-muted);
+      font-size: 11px; font-family: var(--font-display); font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 4px 10px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .layout-btn:hover { border-color:var(--arc); color:var(--arc-bright); background:rgba(71,179,232,0.06); }
+    .layout-btn.active { border-color:var(--gold); color:var(--gold-bright); background:rgba(200,146,42,0.1); }
+    .toolbar-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+
+    /* PANEL ROW */
+    .panel-row { display:flex; flex:1; overflow:hidden; }
+
+    /* PANELS */
+    .panel {
+      display:flex; flex-direction:column;
+      background:var(--surface); overflow:hidden;
+      min-width:0; position:relative;
+    }
+    .panel::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:1px;
+      background:linear-gradient(90deg,transparent,var(--arc-dim),transparent);
+      opacity:0.5;
+    }
+    .panel.hidden { display:none; }
+
+    /* PANEL HEADERS */
     .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      height: var(--header-h);
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 16px; height:var(--header-h);
+      background:var(--surface2); border-bottom:1px solid var(--border);
+      flex-shrink:0; position:relative;
     }
-
-    .panel-header h2,
+    .panel-header h2, .panel > h2 {
+      font-family:var(--font-display); font-size:13px; font-weight:700;
+      letter-spacing:0.15em; text-transform:uppercase; color:var(--arc);
+    }
     .panel > h2 {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-muted);
+      padding:0 16px; height:var(--header-h); line-height:var(--header-h);
+      background:var(--surface2); border-bottom:1px solid var(--border);
+      flex-shrink:0; display:flex; align-items:center; position:relative;
+    }
+    .panel-header::after, .panel > h2::after {
+      content:''; position:absolute; bottom:0; right:0;
+      width:0; height:0; border-style:solid;
+      border-width:0 0 8px 8px;
+      border-color:transparent transparent var(--border-glow) transparent;
+      opacity:0.6;
     }
 
-    .panel > h2 {
-      padding: 0 16px;
-      height: var(--header-h);
-      line-height: var(--header-h);
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    /* ─── COPY BUTTON ────────────────────────────────────── */
+    /* COPY BUTTON */
     #copyCodeBtn {
-      background: var(--accent-dim);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: 6px 14px;
-      font-size: 12px;
-      font-family: var(--font-ui);
-      font-weight: 600;
-      cursor: pointer;
-      letter-spacing: 0.03em;
-      transition: background 0.15s, transform 0.1s;
+      background:var(--arc-dim); color:var(--arc-bright);
+      border:1px solid var(--arc); border-radius:var(--radius);
+      padding:5px 14px; font-size:11px;
+      font-family:var(--font-display); font-weight:700;
+      letter-spacing:0.1em; text-transform:uppercase;
+      cursor:pointer; transition:all 0.15s;
     }
-    #copyCodeBtn:hover  { background: var(--accent); }
-    #copyCodeBtn:active { transform: scale(0.96); }
-    #copyCodeBtn.copied { background: var(--success); color: #0d1117; }
+    #copyCodeBtn:hover { background:var(--arc); color:var(--bg); box-shadow:0 0 10px rgba(71,179,232,0.4); }
+    #copyCodeBtn.copied { background:var(--success); border-color:var(--success); color:#fff; }
 
-    /* ─── CODE TEXTAREA ──────────────────────────────────── */
+    /* CODE TEXTAREA */
     #codeInput {
-      flex: 1;
-      width: 100%;
-      padding: 16px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 1.6;
-      border: none;
-      resize: none;
-      outline: none;
-      tab-size: 2;
+      flex:1; width:100%; padding:16px;
+      background:var(--bg); color:var(--arc-bright);
+      font-family:var(--font-mono); font-size:13px; line-height:1.7;
+      border:none; resize:none; outline:none;
+      tab-size:2; caret-color:var(--gold-bright);
     }
-    #codeInput::placeholder { color: var(--text-muted); }
+    #codeInput::placeholder { color:var(--text-muted); font-style:italic; }
+    #codeInput::-webkit-scrollbar { width:6px; }
+    #codeInput::-webkit-scrollbar-track { background:transparent; }
+    #codeInput::-webkit-scrollbar-thumb { background:var(--border-glow); border-radius:3px; }
 
-    /* ─── VARIABLES PANEL ────────────────────────────────── */
+    /* VARIABLES PANEL */
     #variablesPanel {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      flex:1; overflow-y:auto; padding:14px;
+      display:flex; flex-direction:column; gap:12px;
     }
-
-    #variablesPanel::-webkit-scrollbar        { width: 6px; }
-    #variablesPanel::-webkit-scrollbar-track  { background: transparent; }
-    #variablesPanel::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 3px; }
-
-    .var-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
+    #variablesPanel::-webkit-scrollbar { width:6px; }
+    #variablesPanel::-webkit-scrollbar-track { background:transparent; }
+    #variablesPanel::-webkit-scrollbar-thumb { background:var(--border-glow); border-radius:3px; }
+    .var-group { display:flex; flex-direction:column; gap:5px; }
     .var-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 2px 0;
+      font-family:var(--font-mono); font-size:11px; color:var(--gold);
+      font-weight:600; letter-spacing:0.04em; padding:2px 0;
     }
-
     .var-input {
-      width: 100%;
-      padding: 7px 10px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      outline: none;
-      transition: border-color 0.15s;
+      width:100%; padding:6px 10px;
+      background:var(--bg); border:1px solid var(--border);
+      border-radius:var(--radius); color:var(--arc-bright);
+      font-family:var(--font-mono); font-size:12px;
+      outline:none; transition:border-color 0.15s, box-shadow 0.15s;
     }
-    .var-input:focus { border-color: var(--accent); }
-
-    /* color swatch row */
-    .var-color-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+    .var-input:focus { border-color:var(--arc); box-shadow:0 0 6px rgba(71,179,232,0.2); }
+    .var-color-row { display:flex; gap:8px; align-items:center; }
     .var-color-row input[type="color"] {
-      width: 32px;
-      height: 32px;
-      padding: 2px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--bg);
-      cursor: pointer;
-      flex-shrink: 0;
+      width:34px; height:34px; padding:2px;
+      border:1px solid var(--border); border-radius:var(--radius);
+      background:var(--bg); cursor:pointer; flex-shrink:0;
     }
-    .var-color-row .var-input { flex: 1; }
-
+    .var-color-row .var-input { flex:1; }
     .no-vars {
-      color: var(--text-muted);
-      font-size: 12px;
-      text-align: center;
-      margin-top: 24px;
-      line-height: 1.6;
+      color:var(--text-muted); font-family:var(--font-mono);
+      font-size:12px; text-align:center; margin-top:28px; line-height:1.8;
     }
+    .no-vars::before { content:'// '; color:var(--border-glow); }
 
-    /* ─── PREVIEW IFRAME ─────────────────────────────────── */
-    #preview {
-      flex: 1;
-      border: none;
-      background: #fff;
+    /* PREVIEW IFRAME */
+    #preview { flex:1; border:none; background:#fff; display:block; }
+
+    /* DIVIDERS */
+    .divider {
+      width:5px; background:var(--border); cursor:col-resize;
+      flex-shrink:0; position:relative; transition:background 0.15s; z-index:10;
     }
+    .divider:hover, .divider.dragging {
+      background:var(--arc-dim); box-shadow:0 0 8px rgba(71,179,232,0.3);
+    }
+    .divider::after {
+      content:''; position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:1px; height:40px; background:var(--arc); opacity:0.3;
+    }
+    .divider.hidden { display:none; }
 
-</style>
+    #dragOverlay { display:none; position:fixed; inset:0; z-index:999; cursor:col-resize; }
+    #dragOverlay.active { display:block; }
+
+    /* FOOTER */
+    .footer {
+      height:28px; background:var(--surface2); border-top:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .footer-brand {
+      font-family:var(--font-display); font-size:11px; font-weight:700;
+      letter-spacing:0.2em; text-transform:uppercase; color:var(--text-muted);
+    }
+    .footer-brand .suit { color:var(--arc); }
+    .footer-brand .amp  { color:var(--gold); }
+  </style>
+</head>
+<body>
+
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+<div id="dragOverlay"></div>
+
+<div class="wrapper">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="logo">
+      <div class="arc-icon">
+        <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="14" cy="14" r="12" fill="none" stroke="#1a6a9a" stroke-width="1.5"/>
+          <circle cx="14" cy="14" r="8"  fill="none" stroke="#47b3e8" stroke-width="1"/>
+          <circle cx="14" cy="14" r="4"  fill="#47b3e8" opacity="0.8"/>
+          <circle cx="14" cy="14" r="2"  fill="#7dd4f5"/>
+          <line x1="14" y1="2"  x2="14" y2="6"  stroke="#47b3e8" stroke-width="1.5"/>
+          <line x1="14" y1="22" x2="14" y2="26" stroke="#47b3e8" stroke-width="1.5"/>
+          <line x1="2"  y1="14" x2="6"  y2="14" stroke="#47b3e8" stroke-width="1.5"/>
+          <line x1="22" y1="14" x2="26" y2="14" stroke="#47b3e8" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="logo-text">Iron<span>Suit</span>&amp;<span>Tie</span></div>
+    </div>
+    <div class="status-row">
+      <div class="dot arc"></div>
+      <div class="dot gold"></div>
+      <div class="dot red"></div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <span class="toolbar-label">View:</span>
+    <button class="layout-btn" data-layout="all">All 3</button>
+    <button class="layout-btn" data-layout="code-vars">Code + Vars</button>
+    <button class="layout-btn" data-layout="code-preview">Code + Preview</button>
+    <button class="layout-btn" data-layout="vars-preview">Vars + Preview</button>
+    <div class="toolbar-sep"></div>
+    <button class="layout-btn" data-layout="code">Code</button>
+    <button class="layout-btn" data-layout="vars">Variables</button>
+    <button class="layout-btn" data-layout="preview">Preview</button>
+  </div>
+
+  <!-- PANELS -->
+  <div class="panel-row">
+
+    <!-- CODE -->
+    <section class="panel" id="panelCode" style="flex:1;">
+      <div class="panel-header">
+        <h2>// Code</h2>
+        <button id="copyCodeBtn">Copy</button>
+      </div>
+      <textarea id="codeInput" placeholder="Paste your HTML/CSS code here…"></textarea>
+    </section>
+
+    <div class="divider" id="divider1"></div>
+
+    <!-- VARIABLES -->
+    <section class="panel" id="panelVars" style="flex:0 0 280px;">
+      <h2>// Variables</h2>
+      <div id="variablesPanel">
+        <p class="no-vars">Paste code on the left to detect variables automatically.</p>
+      </div>
+    </section>
+
+    <div class="divider" id="divider2"></div>
+
+    <!-- PREVIEW -->
+    <section class="panel" id="panelPreview" style="flex:1;">
+      <h2>// Preview</h2>
+      <iframe id="preview" title="Live preview"></iframe>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">
+      <span class="suit">Iron</span>Suit<span class="amp">&amp;</span>Tie
+    </div>
+  </div>
+
+</div>
 
 <script>
   const codeInput      = document.getElementById('codeInput');
   const variablesPanel = document.getElementById('variablesPanel');
   const preview        = document.getElementById('preview');
   const copyBtn        = document.getElementById('copyCodeBtn');
+  const overlay        = document.getElementById('dragOverlay');
+  const panelCode      = document.getElementById('panelCode');
+  const panelVars      = document.getElementById('panelVars');
+  const panelPreview   = document.getElementById('panelPreview');
+  const divider1       = document.getElementById('divider1');
+  const divider2       = document.getElementById('divider2');
 
-  // ── State ────────────────────────────────────────────────
-  let variables = {};   // { varName: currentValue }
+  let variables    = {};
   let debounceTimer;
+  let blobUrl      = null;
 
-  // ── Detect CSS custom properties (--var-name: value) ─────
+  // ── Layout ───────────────────────────────────────────────
+  const layouts = {
+    'all':          [true,  true,  true],
+    'code-vars':    [true,  true,  false],
+    'code-preview': [true,  false, true],
+    'vars-preview': [false, true,  true],
+    'code':         [true,  false, false],
+    'vars':         [false, true,  false],
+    'preview':      [false, false, true],
+  };
+
+  function applyLayout(name) {
+    const [showCode, showVars, showPreview] = layouts[name] || layouts['all'];
+    panelCode.classList.toggle('hidden', !showCode);
+    panelVars.classList.toggle('hidden', !showVars);
+    panelPreview.classList.toggle('hidden', !showPreview);
+    divider1.classList.toggle('hidden', !(showCode && showVars));
+    divider2.classList.toggle('hidden', !(showVars && showPreview) && !(showCode && showPreview && !showVars));
+    if (showCode)    panelCode.style.flex    = '1';
+    if (showVars)    panelVars.style.flex    = (showCode || showPreview) ? '0 0 280px' : '1';
+    if (showPreview) panelPreview.style.flex = '1';
+    document.querySelectorAll('.layout-btn').forEach(b => b.classList.toggle('active', b.dataset.layout === name));
+  }
+  document.querySelectorAll('.layout-btn').forEach(btn => btn.addEventListener('click', () => applyLayout(btn.dataset.layout)));
+  applyLayout('all');
+
+  // ── Draggable dividers ────────────────────────────────────
+  function makeDraggable(divider, panelA, panelB) {
+    let startX, startAW, startBW;
+    divider.addEventListener('mousedown', e => {
+      e.preventDefault();
+      startX  = e.clientX;
+      startAW = panelA.getBoundingClientRect().width;
+      startBW = panelB.getBoundingClientRect().width;
+      divider.classList.add('dragging');
+      overlay.classList.add('active');
+      function onMove(e) {
+        const dx = e.clientX - startX;
+        panelA.style.flex = `0 0 ${Math.max(80, startAW + dx)}px`;
+        panelB.style.flex = `0 0 ${Math.max(80, startBW - dx)}px`;
+      }
+      function onUp() {
+        divider.classList.remove('dragging');
+        overlay.classList.remove('active');
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      }
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
+  }
+  makeDraggable(divider1, panelCode, panelVars);
+  makeDraggable(divider2, panelVars, panelPreview);
+
+  // ── Build final code with variables baked in ──────────────
+  function buildFinalCode() {
+    let code = codeInput.value;
+    // Replace each --varname: oldvalue with --varname: newvalue
+    Object.entries(variables).forEach(([name, value]) => {
+      const regex = new RegExp(`(--${name}\\s*:\\s*)[^;}\n]+`, 'g');
+      code = code.replace(regex, `$1${value}`);
+    });
+    return code;
+  }
+
+  // ── Update preview using blob URL ─────────────────────────
+  function updatePreview() {
+    if (!codeInput.value.trim()) return;
+    const finalCode = buildFinalCode();
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    const blob = new Blob([finalCode], { type: 'text/html' });
+    blobUrl = URL.createObjectURL(blob);
+    preview.src = blobUrl;
+  }
+
+  // ── Detect CSS variables from code ────────────────────────
   function detectVariables(code) {
     const regex = /--([\w-]+)\s*:\s*([^;}\n]+)/g;
     const found = {};
@@ -239,58 +425,49 @@
     while ((match = regex.exec(code)) !== null) {
       const name = match[1].trim();
       const val  = match[2].trim();
-      // keep user-edited value if already tracked
       found[name] = (variables[name] !== undefined) ? variables[name] : val;
     }
     return found;
   }
 
-  // ── Guess input type from value ───────────────────────────
   function inferType(value) {
-    if (/^#[0-9a-fA-F]{3,8}$/.test(value))                 return 'color';
-    if (/^rgb/.test(value))                                  return 'color';
-    if (/^\d+(\.\d+)?(px|em|rem|vh|vw|%)$/.test(value))    return 'size';
+    if (/^#[0-9a-fA-F]{3,8}$/.test(value)) return 'color';
+    if (/^rgb/.test(value))                  return 'color';
     return 'text';
   }
 
-  // ── Build the variables UI ────────────────────────────────
+  // ── Render variable inputs ────────────────────────────────
   function renderVariables() {
     variablesPanel.innerHTML = '';
-
     const keys = Object.keys(variables);
     if (keys.length === 0) {
-      variablesPanel.innerHTML = '<p class="no-vars">No CSS variables detected.<br>Add <code>--variable: value;</code> to your code.</p>';
+      variablesPanel.innerHTML = '<p class="no-vars">No CSS variables detected. Add --variable: value; to your code.</p>';
       return;
     }
-
     keys.forEach(name => {
       const value = variables[name];
       const type  = inferType(value);
       const group = document.createElement('div');
       group.className = 'var-group';
-
       const label = document.createElement('div');
       label.className = 'var-label';
       label.textContent = '--' + name;
       group.appendChild(label);
 
       if (type === 'color') {
-        // color picker + text field side by side
         const row = document.createElement('div');
         row.className = 'var-color-row';
-
         const picker = document.createElement('input');
-        picker.type  = 'color';
+        picker.type = 'color';
         picker.value = toHex(value);
-
         const textField = document.createElement('input');
-        textField.type      = 'text';
+        textField.type = 'text';
         textField.className = 'var-input';
-        textField.value     = value;
+        textField.value = value;
 
         picker.addEventListener('input', () => {
-          textField.value   = picker.value;
-          variables[name]   = picker.value;
+          textField.value  = picker.value;
+          variables[name]  = picker.value;
           updatePreview();
         });
         textField.addEventListener('input', () => {
@@ -302,49 +479,22 @@
         row.appendChild(picker);
         row.appendChild(textField);
         group.appendChild(row);
-
       } else {
         const input = document.createElement('input');
-        input.type      = 'text';
+        input.type = 'text';
         input.className = 'var-input';
-        input.value     = value;
+        input.value = value;
         input.addEventListener('input', () => {
           variables[name] = input.value;
           updatePreview();
         });
         group.appendChild(input);
       }
-
       variablesPanel.appendChild(group);
     });
   }
 
-  // ── Apply variable overrides and write to preview ─────────
-  function updatePreview() {
-    let code = codeInput.value;
-
-    // Inject a <style> block that overrides :root variables
-    const overrides = Object.entries(variables)
-      .map(([k, v]) => `  --${k}: ${v};`)
-      .join('\n');
-
-    if (overrides) {
-      const injection = `<style>:root {\n${overrides}\n}</style>`;
-      // place after <head> or at the top
-      if (/<head>/i.test(code)) {
-        code = code.replace(/<head>/i, '<head>' + injection);
-      } else {
-        code = injection + code;
-      }
-    }
-
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    doc.open();
-    doc.write(code);
-    doc.close();
-  }
-
-  // ── Debounced handler for code input ──────────────────────
+  // ── Code input handler ────────────────────────────────────
   codeInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
@@ -354,36 +504,32 @@
     }, 300);
   });
 
-  // ── Copy button ───────────────────────────────────────────
+  // ── Copy button — copies FINAL code with vars baked in ────
   copyBtn.addEventListener('click', () => {
     if (!codeInput.value) return;
-    navigator.clipboard.writeText(codeInput.value).then(() => {
-      copyBtn.textContent = '✓ Copied!';
+    const finalCode = buildFinalCode();
+    navigator.clipboard.writeText(finalCode).then(() => {
+      copyBtn.textContent = '✓ Copied';
       copyBtn.classList.add('copied');
-      setTimeout(() => {
-        copyBtn.textContent = 'Copy';
-        copyBtn.classList.remove('copied');
-      }, 2000);
+      setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2000);
     });
   });
 
-  // ── Tab key inserts spaces instead of leaving the field ───
+  // ── Tab key ───────────────────────────────────────────────
   codeInput.addEventListener('keydown', e => {
     if (e.key === 'Tab') {
       e.preventDefault();
       const s = codeInput.selectionStart;
-      const end = codeInput.selectionEnd;
-      codeInput.value = codeInput.value.substring(0, s) + '  ' + codeInput.value.substring(end);
+      codeInput.value = codeInput.value.substring(0, s) + '  ' + codeInput.value.substring(codeInput.selectionEnd);
       codeInput.selectionStart = codeInput.selectionEnd = s + 2;
     }
   });
 
-  // ── Utility: convert any color string to hex for picker ───
   function toHex(color) {
     if (/^#[0-9a-fA-F]{6}$/.test(color)) return color;
-    if (/^#[0-9a-fA-F]{3}$/.test(color)) {
-      return '#' + color[1]+color[1]+color[2]+color[2]+color[3]+color[3];
-    }
-    // fallback
-    return '#4f8ef7';
-  }</script>
+    if (/^#[0-9a-fA-F]{3}$/.test(color)) return '#' + color[1]+color[1]+color[2]+color[2]+color[3]+color[3];
+    return '#47b3e8';
+  }
+</script>
+</body>
+</html>
